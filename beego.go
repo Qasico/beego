@@ -72,8 +72,6 @@ func initBeforeHTTPRun() {
 	AddAPPStartHook(registerDefaultErrorHandler)
 	AddAPPStartHook(registerSession)
 	AddAPPStartHook(registerDocs)
-	AddAPPStartHook(registerTemplate)
-	AddAPPStartHook(registerAdmin)
 
 	for _, hk := range hooks {
 		if err := hk(); err != nil {
