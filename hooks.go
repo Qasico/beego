@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"path/filepath"
 
-	"github.com/astaxie/beego/session"
+	"github.com/qasico/beego/session"
 )
 
 //

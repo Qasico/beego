@@ -17,7 +17,7 @@ package beego
 import (
 	"testing"
 
-	"github.com/astaxie/beego/context"
+	"github.com/qasico/beego/context"
 )
 
 func TestGetInt(t *testing.T) {

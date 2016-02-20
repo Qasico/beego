@@ -26,7 +26,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/astaxie/beego/context"
+	"github.com/qasico/beego/context"
 )
 
 var errNotStaticRequest = errors.New("request not a static file request")

@@ -1,7 +1,7 @@
 ## Beego
 
 [![Build Status](https://travis-ci.org/astaxie/beego.svg?branch=master)](https://travis-ci.org/astaxie/beego)
-[![GoDoc](http://godoc.org/github.com/astaxie/beego?status.svg)](http://godoc.org/github.com/astaxie/beego)
+[![GoDoc](http://godoc.org/github.com/qasico/beego?status.svg)](http://godoc.org/github.com/qasico/beego)
 
 beego is used for rapid development of RESTful APIs, web apps and backend services in Go.
 It is inspired by Tornado, Sinatra and Flask. beego has some Go-specific features such as interfaces and struct embedding.
@@ -11,13 +11,13 @@ More info [beego.me](http://beego.me)
 ##Quick Start
 ######Download and install
 
-    go get github.com/astaxie/beego
+    go get github.com/qasico/beego
 
 ######Create file `hello.go`
 ```go
 package main
 
-import "github.com/astaxie/beego"
+import "github.com/qasico/beego"
 
 func main(){
     beego.Run()

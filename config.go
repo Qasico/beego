@@ -21,9 +21,9 @@ import (
 	"strings"
 	"fmt"
 
-	"github.com/astaxie/beego/config"
-	"github.com/astaxie/beego/session"
-	"github.com/astaxie/beego/utils"
+	"github.com/qasico/beego/config"
+	"github.com/qasico/beego/session"
+	"github.com/qasico/beego/utils"
 )
 
 // Config is the main struct for BConfig
