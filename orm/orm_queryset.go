@@ -139,11 +139,22 @@ func (o querySet) RelatedSel(params ...interface{}) QuerySeter {
 				o.related = append(o.related, val)
 			case int:
 				o.relDepth = val
+			case []string:
+				if len(val) == 0 {
+					o.relDepth = DefaultRelsDepth
+				} else {
+					for _, pr := range val {
+						o.related = append(o.related, pr)
+					}
+				}
+			case nil:
+				o.relDepth = DefaultRelsDepth
 			default:
 				panic(fmt.Errorf("<QuerySeter.RelatedSel> wrong param kind: %v", val))
 			}
 		}
 	}
+
 	return &o
 }
 
