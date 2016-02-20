@@ -24,6 +24,7 @@ import (
 	"github.com/qasico/beego/config"
 	"github.com/qasico/beego/session"
 	"github.com/qasico/beego/utils"
+	"github.com/qasico/beego/helper"
 )
 
 // Config is the main struct for BConfig
@@ -187,13 +188,39 @@ func init() {
 		},
 	}
 
-	appConfigPath = filepath.Join(AppPath, "conf", "app.conf")
-	if !utils.FileExists(appConfigPath) {
-		AppConfig = &beegoAppConfig{config.NewFakeConfig()}
-		return
-	}
+	parseEnv(AppPath)
+	//
+	//appConfigPath = filepath.Join(AppPath, "conf", "app.conf")
+	//if !utils.FileExists(appConfigPath) {
+	//	AppConfig = &beegoAppConfig{config.NewFakeConfig()}
+	//	return
+	//}
 
-	parseConfig(appConfigPath)
+	//parseConfig(appConfigPath)
+	//fmt.Println(BConfig)
+}
+
+func parseEnv(appPath string) (err error) {
+	err = helper.LoadEnv(appPath)
+
+	BConfig.RunMode = helper.EnvString("API_RUNMODE", "prod")
+	BConfig.AppName = helper.EnvString("APP_NAME", BConfig.AppName)
+	BConfig.RecoverPanic = helper.EnvBool("RECOVER_PANIC", true)
+	BConfig.ServerName = helper.EnvString("SERVER_NAME", BConfig.AppName)
+	BConfig.EnableErrorsShow = helper.EnvBool("APP_DEBUG", BConfig.EnableErrorsShow)
+	BConfig.Listen.HTTPAddr = helper.EnvString("API_ADDR", "127.0.0.1")
+	BConfig.Listen.HTTPPort = helper.EnvInt("API_PORT", BConfig.Listen.HTTPPort)
+
+	BeeLogger.Close()
+	for adaptor, config := range BConfig.Log.Outputs {
+		err = BeeLogger.SetLogger(adaptor, config)
+		if err != nil {
+			fmt.Printf("%s with the config `%s` got err:%s\n", adaptor, config, err)
+		}
+	}
+	SetLogFuncCall(BConfig.Log.FileLineNum)
+
+	return err
 }
 
 // now only support ini, next will support json.
@@ -255,38 +282,38 @@ func parseConfig(appConfigPath string) (err error) {
 	BConfig.Log.AccessLogs = AppConfig.DefaultBool("LogAccessLogs", BConfig.Log.AccessLogs)
 	BConfig.Log.FileLineNum = AppConfig.DefaultBool("LogFileLineNum", BConfig.Log.FileLineNum)
 
-	if sd := AppConfig.String("StaticDir"); sd != "" {
-		for k := range BConfig.WebConfig.StaticDir {
-			delete(BConfig.WebConfig.StaticDir, k)
-		}
-		sds := strings.Fields(sd)
-		for _, v := range sds {
-			if url2fsmap := strings.SplitN(v, ":", 2); len(url2fsmap) == 2 {
-				BConfig.WebConfig.StaticDir["/"+strings.TrimRight(url2fsmap[0], "/")] = url2fsmap[1]
-			} else {
-				BConfig.WebConfig.StaticDir["/"+strings.TrimRight(url2fsmap[0], "/")] = url2fsmap[0]
-			}
-		}
-	}
-
-	if sgz := AppConfig.String("StaticExtensionsToGzip"); sgz != "" {
-		extensions := strings.Split(sgz, ",")
-		fileExts := []string{}
-		for _, ext := range extensions {
-			ext = strings.TrimSpace(ext)
-			if ext == "" {
-				continue
-			}
-			if !strings.HasPrefix(ext, ".") {
-				ext = "." + ext
-			}
-			fileExts = append(fileExts, ext)
-		}
-		if len(fileExts) > 0 {
-			BConfig.WebConfig.StaticExtensionsToGzip = fileExts
-		}
-	}
-
+	//if sd := AppConfig.String("StaticDir"); sd != "" {
+	//	for k := range BConfig.WebConfig.StaticDir {
+	//		delete(BConfig.WebConfig.StaticDir, k)
+	//	}
+	//	sds := strings.Fields(sd)
+	//	for _, v := range sds {
+	//		if url2fsmap := strings.SplitN(v, ":", 2); len(url2fsmap) == 2 {
+	//			BConfig.WebConfig.StaticDir["/"+strings.TrimRight(url2fsmap[0], "/")] = url2fsmap[1]
+	//		} else {
+	//			BConfig.WebConfig.StaticDir["/"+strings.TrimRight(url2fsmap[0], "/")] = url2fsmap[0]
+	//		}
+	//	}
+	//}
+	//
+	//if sgz := AppConfig.String("StaticExtensionsToGzip"); sgz != "" {
+	//	extensions := strings.Split(sgz, ",")
+	//	fileExts := []string{}
+	//	for _, ext := range extensions {
+	//		ext = strings.TrimSpace(ext)
+	//		if ext == "" {
+	//			continue
+	//		}
+	//		if !strings.HasPrefix(ext, ".") {
+	//			ext = "." + ext
+	//		}
+	//		fileExts = append(fileExts, ext)
+	//	}
+	//	if len(fileExts) > 0 {
+	//		BConfig.WebConfig.StaticExtensionsToGzip = fileExts
+	//	}
+	//}
+	//
 	if lo := AppConfig.String("LogOutputs"); lo != "" {
 		los := strings.Split(lo, ";")
 		for _, v := range los {
@@ -297,8 +324,8 @@ func parseConfig(appConfigPath string) (err error) {
 			}
 		}
 	}
-
-	//init log
+	//
+	////init log
 	BeeLogger.Close()
 	for adaptor, config := range BConfig.Log.Outputs {
 		err = BeeLogger.SetLogger(adaptor, config)
