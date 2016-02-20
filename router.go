@@ -817,9 +817,9 @@ Admin:
 		var devInfo string
 		if findRouter {
 			if routerInfo != nil {
-				devInfo = fmt.Sprintf("| % -10s | % -40s | % -16s | % -10s | % -40s |", r.Method, r.URL.Path, timeDur.String(), "match", routerInfo.pattern)
+				devInfo = fmt.Sprintf("| % -10s | % -60s | % -16s | % -10s |", r.Method, r.URL.String(), timeDur.String(), "match")
 			} else {
-				devInfo = fmt.Sprintf("| % -10s | % -40s | % -16s | % -10s |", r.Method, r.URL.Path, timeDur.String(), "match")
+				devInfo = fmt.Sprintf("| % -10s | % -60s | % -16s | % -10s |", r.Method, r.URL.Path, timeDur.String(), "match")
 			}
 		} else {
 			devInfo = fmt.Sprintf("| % -10s | % -40s | % -16s | % -10s |", r.Method, r.URL.Path, timeDur.String(), "notmatch")
