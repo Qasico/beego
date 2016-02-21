@@ -36,6 +36,11 @@ func (r *Response) SuccessWithModel(httpMethod string, model interface{}) {
 	}
 }
 
+func (r *Response) Success() {
+	r.Format = make(map[string]interface{})
+	r.Format["status"] = "success"
+}
+
 func (r *Response) Fail(errorData interface{}) {
 	r.Format = make(map[string]interface{})
 	r.Format["status"] = "failed"
@@ -50,7 +55,7 @@ func (r *Response) Fail(errorData interface{}) {
 	}
 }
 
-func (r *Response) Validator(model interface{}) (bool, map[string]interface{}) {
+func (r *Response) Validator(model interface{}) (bool) {
 	errorData := make(map[string]string)
 	validator := validation.Validation{}
 
@@ -62,10 +67,18 @@ func (r *Response) Validator(model interface{}) (bool, map[string]interface{}) {
 		}
 
 		r.Fail(errorData)
-		return false, r.Format
+		return false
 	}
 
-	return true, r.Format
+	return true
+}
+
+func (r *Response) IsSuccess() bool  {
+	if r.Format["status"] == "success" {
+		return true
+	}
+
+	return false
 }
 
 func ClearErrorPrefix(s string) string {
