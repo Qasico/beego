@@ -210,6 +210,7 @@ func parseEnv(appPath string) (err error) {
 	BConfig.EnableErrorsShow = helper.EnvBool("APP_DEBUG", BConfig.EnableErrorsShow)
 	BConfig.Listen.HTTPAddr = helper.EnvString("API_ADDR", "127.0.0.1")
 	BConfig.Listen.HTTPPort = helper.EnvInt("API_PORT", BConfig.Listen.HTTPPort)
+	BConfig.CopyRequestBody = true
 
 	BeeLogger.Close()
 	for adaptor, config := range BConfig.Log.Outputs {
