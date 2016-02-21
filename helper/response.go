@@ -2,60 +2,40 @@ package helper
 
 import (
 	"strings"
+
 	"github.com/qasico/beego/validation"
 )
 
-type Response struct {
-	Format map[string]interface{}
+type APIResponse struct {
+	Code    int
+	Data    interface{}
+	Total   int64
+	Status  string
+	Message interface{}
 }
 
-var (
-	Respond = Response{}
-)
-
-func (r *Response) SuccessWithData(total int64, data ...[]interface{}) {
-	r.Format = make(map[string]interface{})
-	r.Format["status"] = "success"
-	r.Format["total"] = total
-
-	if data != nil {
-		r.Format["data"] = data[0]
-	} else {
-		r.Format["data"] = nil
-	}
+func (APIRes *APIResponse) Success(total int64, data interface{}) {
+	APIRes.Code = 200
+	APIRes.Status = "success"
+	APIRes.Total = total
+	APIRes.Data = data
 }
 
-func (r *Response) SuccessWithModel(httpMethod string, model interface{}) {
-	r.Format = make(map[string]interface{})
-	r.Format["status"] = "success"
+func (APIRes *APIResponse) Failed(code int, message interface{}) {
+	APIRes.Code = code
+	APIRes.Status = "failed"
 
-	if httpMethod == "POST" {
-		r.Format["data"] = model
-	} else if httpMethod == "GET" && model != nil {
-		r.Format["data"] = model
-	}
-}
-
-func (r *Response) Success() {
-	r.Format = make(map[string]interface{})
-	r.Format["status"] = "success"
-}
-
-func (r *Response) Fail(errorData interface{}) {
-	r.Format = make(map[string]interface{})
-	r.Format["status"] = "failed"
-
-	switch errorData.(type) {
+	switch message.(type) {
 	case string:
-		r.Format["message"] = map[string]string{
-			"error": ClearErrorPrefix(errorData.(string)),
+		APIRes.Message = map[string]string{
+			"error": ClearErrorPrefix(message.(string)),
 		}
 	default:
-		r.Format["message"] = errorData
+		APIRes.Message = message
 	}
 }
 
-func (r *Response) Validator(model interface{}) (bool) {
+func (APIRes *APIResponse) Validator(model interface{}) (bool) {
 	errorData := make(map[string]string)
 	validator := validation.Validation{}
 
@@ -66,19 +46,31 @@ func (r *Response) Validator(model interface{}) (bool) {
 			errorData[field[0]] = err.Message
 		}
 
-		r.Fail(errorData)
+		APIRes.Failed(304, errorData)
 		return false
 	}
 
 	return true
 }
 
-func (r *Response) IsSuccess() bool  {
-	if r.Format["status"] == "success" {
-		return true
+func (APIRes *APIResponse) GetResponse(httpMethod string) (response map[string]interface{}) {
+	response = make(map[string]interface{})
+	response["status"] = APIRes.Status
+
+	if APIRes.Status == "success" {
+		if httpMethod == "GET" {
+			response["data"] = APIRes.Data
+			response["total"] = APIRes.Total
+		} else {
+			if APIRes.Data != nil {
+				response["data"] = APIRes.Data
+			}
+		}
+	} else {
+		response["message"] = APIRes.Message
 	}
 
-	return false
+	return response
 }
 
 func ClearErrorPrefix(s string) string {
