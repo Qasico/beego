@@ -69,7 +69,6 @@ func Run(params ...string) {
 func initBeforeHTTPRun() {
 	//init hooks
 	AddAPPStartHook(registerMime)
-	AddAPPStartHook(registerDefaultErrorHandler)
 	AddAPPStartHook(registerSession)
 	AddAPPStartHook(registerDocs)
 

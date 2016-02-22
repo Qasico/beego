@@ -860,9 +860,8 @@ func (p *ControllerRegister) recoverPanic(context *beecontext.Context) {
 				Critical(fmt.Sprintf("%s:%d", file, line))
 				stack = stack + fmt.Sprintln(fmt.Sprintf("%s:%d", file, line))
 			}
-			if BConfig.RunMode == DEV {
-				showErr(err, context, stack)
-			}
+
+			showErr(err, context, stack)
 		}
 	}
 }

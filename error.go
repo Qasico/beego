@@ -16,15 +16,14 @@ package beego
 
 import (
 	"fmt"
-	"html/template"
 	"net/http"
 	"reflect"
-	"runtime"
 	"strconv"
 	"strings"
 
 	"github.com/qasico/beego/context"
 	"github.com/qasico/beego/utils"
+	"github.com/qasico/beego/helper"
 )
 
 const (
@@ -32,170 +31,16 @@ const (
 	errorTypeController
 )
 
-var tpl = `
-<!DOCTYPE html>
-<html>
-<head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-    <title>beego application error</title>
-    <style>
-        html, body, body * {padding: 0; margin: 0;}
-        #header {background:#ffd; border-bottom:solid 2px #A31515; padding: 20px 10px;}
-        #header h2{ }
-        #footer {border-top:solid 1px #aaa; padding: 5px 10px; font-size: 12px; color:green;}
-        #content {padding: 5px;}
-        #content .stack b{ font-size: 13px; color: red;}
-        #content .stack pre{padding-left: 10px;}
-        table {}
-        td.t {text-align: right; padding-right: 5px; color: #888;}
-    </style>
-    <script type="text/javascript">
-    </script>
-</head>
-<body>
-    <div id="header">
-        <h2>{{.AppError}}</h2>
-    </div>
-    <div id="content">
-        <table>
-            <tr>
-                <td class="t">Request Method: </td><td>{{.RequestMethod}}</td>
-            </tr>
-            <tr>
-                <td class="t">Request URL: </td><td>{{.RequestURL}}</td>
-            </tr>
-            <tr>
-                <td class="t">RemoteAddr: </td><td>{{.RemoteAddr }}</td>
-            </tr>
-        </table>
-        <div class="stack">
-            <b>Stack</b>
-            <pre>{{.Stack}}</pre>
-        </div>
-    </div>
-    <div id="footer">
-        <p>beego {{ .BeegoVersion }} (beego framework)</p>
-        <p>golang version: {{.GoVersion}}</p>
-    </div>
-</body>
-</html>
-`
-
 // render default application error page with error and stack string.
 func showErr(err interface{}, ctx *context.Context, stack string) {
-	t, _ := template.New("beegoerrortemp").Parse(tpl)
 	data := map[string]string{
-		"AppError":      fmt.Sprintf("%s:%v", BConfig.AppName, err),
-		"RequestMethod": ctx.Input.Method(),
-		"RequestURL":    ctx.Input.URI(),
-		"RemoteAddr":    ctx.Input.IP(),
-		"Stack":         stack,
-		"BeegoVersion":  VERSION,
-		"GoVersion":     runtime.Version(),
+		"error":          fmt.Sprintf("%v", err),
+		"request_method": ctx.Input.Method(),
+		"request_url":    ctx.Input.URI(),
 	}
-	ctx.ResponseWriter.WriteHeader(500)
-	t.Execute(ctx.ResponseWriter, data)
+
+	renderError(500, ctx, data)
 }
-
-var errtpl = `
-<!DOCTYPE html>
-<html lang="en">
-	<head>
-		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-		<title>{{.Title}}</title>
-		<style type="text/css">
-			* {
-				margin:0;
-				padding:0;
-			}
-
-			body {
-				background-color:#EFEFEF;
-				font: .9em "Lucida Sans Unicode", "Lucida Grande", sans-serif;
-			}
-
-			#wrapper{
-				width:600px;
-				margin:40px auto 0;
-				text-align:center;
-				-moz-box-shadow: 5px 5px 10px rgba(0,0,0,0.3);
-				-webkit-box-shadow: 5px 5px 10px rgba(0,0,0,0.3);
-				box-shadow: 5px 5px 10px rgba(0,0,0,0.3);
-			}
-
-			#wrapper h1{
-				color:#FFF;
-				text-align:center;
-				margin-bottom:20px;
-			}
-
-			#wrapper a{
-				display:block;
-				font-size:.9em;
-				padding-top:20px;
-				color:#FFF;
-				text-decoration:none;
-				text-align:center;
-			}
-
-			#container {
-				width:600px;
-				padding-bottom:15px;
-				background-color:#FFFFFF;
-			}
-
-			.navtop{
-				height:40px;
-				background-color:#24B2EB;
-				padding:13px;
-			}
-
-			.content {
-				padding:10px 10px 25px;
-				background: #FFFFFF;
-				margin:;
-				color:#333;
-			}
-
-			a.button{
-				color:white;
-				padding:15px 20px;
-				text-shadow:1px 1px 0 #00A5FF;
-				font-weight:bold;
-				text-align:center;
-				border:1px solid #24B2EB;
-				margin:0px 200px;
-				clear:both;
-				background-color: #24B2EB;
-				border-radius:100px;
-				-moz-border-radius:100px;
-				-webkit-border-radius:100px;
-			}
-
-			a.button:hover{
-				text-decoration:none;
-				background-color: #24B2EB;
-			}
-
-		</style>
-	</head>
-	<body>
-		<div id="wrapper">
-			<div id="container">
-				<div class="navtop">
-					<h1>{{.Title}}</h1>
-				</div>
-				<div id="content">
-					{{.Content}}
-					<a href="/" title="Home" class="button">Go Home</a><br />
-
-					<br>Powered by beego {{.BeegoVersion}}
-				</div>
-			</div>
-		</div>
-	</body>
-</html>
-`
 
 type errorInfo struct {
 	controllerType reflect.Type
@@ -207,164 +52,6 @@ type errorInfo struct {
 // ErrorMaps holds map of http handlers for each error string.
 // there is 10 kinds default error(40x and 50x)
 var ErrorMaps = make(map[string]*errorInfo, 10)
-
-// show 401 unauthorized error.
-func unauthorized(rw http.ResponseWriter, r *http.Request) {
-	t, _ := template.New("beegoerrortemp").Parse(errtpl)
-	data := map[string]interface{}{
-		"Title":        http.StatusText(401),
-		"BeegoVersion": VERSION,
-	}
-	data["Content"] = template.HTML("<br>The page you have requested can't be authorized." +
-		"<br>Perhaps you are here because:" +
-		"<br><br><ul>" +
-		"<br>The credentials you supplied are incorrect" +
-		"<br>There are errors in the website address" +
-		"</ul>")
-	t.Execute(rw, data)
-}
-
-// show 402 Payment Required
-func paymentRequired(rw http.ResponseWriter, r *http.Request) {
-	t, _ := template.New("beegoerrortemp").Parse(errtpl)
-	data := map[string]interface{}{
-		"Title":        http.StatusText(402),
-		"BeegoVersion": VERSION,
-	}
-	data["Content"] = template.HTML("<br>The page you have requested Payment Required." +
-		"<br>Perhaps you are here because:" +
-		"<br><br><ul>" +
-		"<br>The credentials you supplied are incorrect" +
-		"<br>There are errors in the website address" +
-		"</ul>")
-	t.Execute(rw, data)
-}
-
-// show 403 forbidden error.
-func forbidden(rw http.ResponseWriter, r *http.Request) {
-	t, _ := template.New("beegoerrortemp").Parse(errtpl)
-	data := map[string]interface{}{
-		"Title":        http.StatusText(403),
-		"BeegoVersion": VERSION,
-	}
-	data["Content"] = template.HTML("<br>The page you have requested is forbidden." +
-		"<br>Perhaps you are here because:" +
-		"<br><br><ul>" +
-		"<br>Your address may be blocked" +
-		"<br>The site may be disabled" +
-		"<br>You need to log in" +
-		"</ul>")
-	t.Execute(rw, data)
-}
-
-// show 404 notfound error.
-func notFound(rw http.ResponseWriter, r *http.Request) {
-	t, _ := template.New("beegoerrortemp").Parse(errtpl)
-	data := map[string]interface{}{
-		"Title":        http.StatusText(404),
-		"BeegoVersion": VERSION,
-	}
-	data["Content"] = template.HTML("<br>The page you have requested has flown the coop." +
-		"<br>Perhaps you are here because:" +
-		"<br><br><ul>" +
-		"<br>The page has moved" +
-		"<br>The page no longer exists" +
-		"<br>You were looking for your puppy and got lost" +
-		"<br>You like 404 pages" +
-		"</ul>")
-	t.Execute(rw, data)
-}
-
-// show 405 Method Not Allowed
-func methodNotAllowed(rw http.ResponseWriter, r *http.Request) {
-	t, _ := template.New("beegoerrortemp").Parse(errtpl)
-	data := map[string]interface{}{
-		"Title":        http.StatusText(405),
-		"BeegoVersion": VERSION,
-	}
-	data["Content"] = template.HTML("<br>The method you have requested Not Allowed." +
-		"<br>Perhaps you are here because:" +
-		"<br><br><ul>" +
-		"<br>The method specified in the Request-Line is not allowed for the resource identified by the Request-URI" +
-		"<br>The response MUST include an Allow header containing a list of valid methods for the requested resource." +
-		"</ul>")
-	t.Execute(rw, data)
-}
-
-// show 500 internal server error.
-func internalServerError(rw http.ResponseWriter, r *http.Request) {
-	t, _ := template.New("beegoerrortemp").Parse(errtpl)
-	data := map[string]interface{}{
-		"Title":        http.StatusText(500),
-		"BeegoVersion": VERSION,
-	}
-	data["Content"] = template.HTML("<br>The page you have requested is down right now." +
-		"<br><br><ul>" +
-		"<br>Please try again later and report the error to the website administrator" +
-		"<br></ul>")
-	t.Execute(rw, data)
-}
-
-// show 501 Not Implemented.
-func notImplemented(rw http.ResponseWriter, r *http.Request) {
-	t, _ := template.New("beegoerrortemp").Parse(errtpl)
-	data := map[string]interface{}{
-		"Title":        http.StatusText(504),
-		"BeegoVersion": VERSION,
-	}
-	data["Content"] = template.HTML("<br>The page you have requested is Not Implemented." +
-		"<br><br><ul>" +
-		"<br>Please try again later and report the error to the website administrator" +
-		"<br></ul>")
-	t.Execute(rw, data)
-}
-
-// show 502 Bad Gateway.
-func badGateway(rw http.ResponseWriter, r *http.Request) {
-	t, _ := template.New("beegoerrortemp").Parse(errtpl)
-	data := map[string]interface{}{
-		"Title":        http.StatusText(502),
-		"BeegoVersion": VERSION,
-	}
-	data["Content"] = template.HTML("<br>The page you have requested is down right now." +
-		"<br><br><ul>" +
-		"<br>The server, while acting as a gateway or proxy, received an invalid response from the upstream server it accessed in attempting to fulfill the request." +
-		"<br>Please try again later and report the error to the website administrator" +
-		"<br></ul>")
-	t.Execute(rw, data)
-}
-
-// show 503 service unavailable error.
-func serviceUnavailable(rw http.ResponseWriter, r *http.Request) {
-	t, _ := template.New("beegoerrortemp").Parse(errtpl)
-	data := map[string]interface{}{
-		"Title":        http.StatusText(503),
-		"BeegoVersion": VERSION,
-	}
-	data["Content"] = template.HTML("<br>The page you have requested is unavailable." +
-		"<br>Perhaps you are here because:" +
-		"<br><br><ul>" +
-		"<br><br>The page is overloaded" +
-		"<br>Please try again later." +
-		"</ul>")
-	t.Execute(rw, data)
-}
-
-// show 504 Gateway Timeout.
-func gatewayTimeout(rw http.ResponseWriter, r *http.Request) {
-	t, _ := template.New("beegoerrortemp").Parse(errtpl)
-	data := map[string]interface{}{
-		"Title":        http.StatusText(504),
-		"BeegoVersion": VERSION,
-	}
-	data["Content"] = template.HTML("<br>The page you have requested is unavailable." +
-		"<br>Perhaps you are here because:" +
-		"<br><br><ul>" +
-		"<br><br>The server, while acting as a gateway or proxy, did not receive a timely response from the upstream server specified by the URI." +
-		"<br>Please try again later." +
-		"</ul>")
-	t.Execute(rw, data)
-}
 
 // ErrorHandler registers http.HandlerFunc to each http err code string.
 // usage:
@@ -417,17 +104,16 @@ func exception(errCode string, ctx *context.Context) {
 			return
 		}
 	}
-	//if 50x error has been removed from errorMap
-	ctx.ResponseWriter.WriteHeader(atoi(errCode))
-	ctx.WriteString(errCode)
+
+	renderError(atoi(errCode), ctx, http.StatusText(atoi(errCode)))
 }
 
 func executeError(err *errorInfo, ctx *context.Context, code int) {
 	if err.errorType == errorTypeHandler {
-		ctx.ResponseWriter.WriteHeader(code)
-		err.handler(ctx.ResponseWriter, ctx.Request)
+		renderError(code, ctx, http.StatusText(code))
 		return
 	}
+
 	if err.errorType == errorTypeController {
 		ctx.Output.SetStatus(code)
 		//Invoke the request handler
@@ -457,4 +143,13 @@ func executeError(err *errorInfo, ctx *context.Context, code int) {
 		// finish all runrouter. release resource
 		execController.Finish()
 	}
+}
+
+func renderError(code int, ctx *context.Context, message ...interface{}) {
+	response := helper.APIResponse{}
+	response.Failed(code, message)
+
+	ctx.Output.ContentType("json")
+	ctx.ResponseWriter.WriteHeader(response.Code)
+	ctx.Output.JSON(response.GetResponse("GET"), true, true)
 }
