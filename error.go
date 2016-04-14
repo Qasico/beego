@@ -15,7 +15,6 @@
 package beego
 
 import (
-	"fmt"
 	"net/http"
 	"reflect"
 	"strconv"
@@ -24,6 +23,7 @@ import (
 	"github.com/qasico/beego/context"
 	"github.com/qasico/beego/utils"
 	"github.com/qasico/beego/helper"
+	"fmt"
 )
 
 const (
@@ -33,13 +33,7 @@ const (
 
 // render default application error page with error and stack string.
 func showErr(err interface{}, ctx *context.Context, stack string) {
-	data := map[string]string{
-		"error":          fmt.Sprintf("%v", err),
-		"request_method": ctx.Input.Method(),
-		"request_url":    ctx.Input.URI(),
-	}
-
-	renderError(500, ctx, data)
+	renderError(500, ctx, fmt.Sprintf("%v", err))
 }
 
 type errorInfo struct {
@@ -145,9 +139,16 @@ func executeError(err *errorInfo, ctx *context.Context, code int) {
 	}
 }
 
-func renderError(code int, ctx *context.Context, message ...interface{}) {
+func renderError(code int, ctx *context.Context, message string) {
 	response := helper.APIResponse{}
-	response.Failed(code, message)
+
+	data := map[string]string{
+		"error":          message,
+		"request_method": ctx.Input.Method(),
+		"request_url":    ctx.Input.URI(),
+	}
+
+	response.Failed(code, data)
 
 	ctx.Output.ContentType("json")
 	ctx.ResponseWriter.WriteHeader(response.Code)
