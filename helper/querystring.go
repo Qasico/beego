@@ -92,9 +92,14 @@ offset int64, limit int64, join []string) {
 //
 // Making query from conditional map
 //
-func ModelCondition(c map[string]string) (query map[int]map[string]string, fields []string, groupby []string, sortby []string, order []string,
+func ModelCondition(c map[string]string, j bool) (query map[int]map[string]string, fields []string, groupby []string, sortby []string, order []string,
 offset int64, limit int64, join []string) {
 	query = make(map[int]map[string]string)
 	query[1] = c
+
+	if j == false {
+		join = []string{"none"}
+	}
+
 	return query, fields, groupby, sortby, order, offset, limit, join
 }
