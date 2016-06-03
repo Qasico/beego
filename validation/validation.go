@@ -328,10 +328,8 @@ func (v *Validation) Valid(obj interface{}) (b bool, err error) {
 		}
 	}
 
-	if !v.HasErrors() {
-		if form, ok := obj.(ValidFormer); ok {
-			form.Valid(v)
-		}
+	if form, ok := obj.(ValidFormer); ok {
+		form.Valid(v)
 	}
 
 	return !v.HasErrors(), nil

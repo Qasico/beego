@@ -171,7 +171,7 @@ func init() {
 			XSRFKey:                "beegoxsrf",
 			XSRFExpire:             0,
 			Session: SessionConfig{
-				SessionOn:             false,
+				SessionOn:             true,
 				SessionProvider:       "memory",
 				SessionName:           "beegosessionID",
 				SessionGCMaxLifetime:  3600,
@@ -373,16 +373,18 @@ func newAppConfig(appConfigProvider, appConfigPath string) (*beegoAppConfig, err
 }
 
 func (b *beegoAppConfig) Set(key, val string) error {
-	if err := b.innerConfig.Set(BConfig.RunMode+"::"+key, val); err != nil {
+	if err := b.innerConfig.Set(BConfig.RunMode + "::" + key, val); err != nil {
 		return err
 	}
 	return b.innerConfig.Set(key, val)
 }
 
 func (b *beegoAppConfig) String(key string) string {
-	if v := b.innerConfig.String(BConfig.RunMode + "::" + key); v != "" {
-		return v
-	}
+	fmt.Println(key)
+
+	//if v := b.innerConfig.String(BConfig.RunMode + "::" + key); v != "" {
+	//	return v
+	//}
 	return b.innerConfig.String(key)
 }
 
