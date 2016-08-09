@@ -29,7 +29,7 @@ func QueryString(qs url.Values) (query map[int]map[string]string, fields []strin
 offset int64, limit int64, join []string) {
 	var cq map[string]string = make(map[string]string)
 	query = make(map[int]map[string]string)
-	limit = 10
+	limit = 0
 	offset = 0
 
 	if param, ok := qs["fields"]; ok {
@@ -67,6 +67,12 @@ offset int64, limit int64, join []string) {
 
 	if param, ok := qs["query"]; ok {
 		var index int = 0
+
+		// if has more then 1 slice, we need joined it
+		if len(param) > 1 {
+			param[0] = strings.Join(param, ",")
+		}
+
 		for _, cond := range strings.Split(param[0], "|") {
 
 			for _, partcond := range strings.Split(cond, ",") {
