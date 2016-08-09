@@ -24,7 +24,7 @@ import (
 )
 
 const (
-	formatDate     = "2006-01-02"
+	formatDate = "2006-01-02"
 	formatDateTime = "2006-01-02 15:04:05"
 )
 
@@ -181,7 +181,7 @@ func (d *dbBase) collectFieldValue(mi *modelInfo, fi *fieldInfo, ind reflect.Val
 				}
 			default:
 				switch {
-				case fi.fieldType&IsPostiveIntegerField > 0:
+				case fi.fieldType & IsPostiveIntegerField > 0:
 					if field.Kind() == reflect.Ptr {
 						if field.IsNil() {
 							value = nil
@@ -191,7 +191,7 @@ func (d *dbBase) collectFieldValue(mi *modelInfo, fi *fieldInfo, ind reflect.Val
 					} else {
 						value = field.Uint()
 					}
-				case fi.fieldType&IsIntegerField > 0:
+				case fi.fieldType & IsIntegerField > 0:
 					if ni, ok := field.Interface().(sql.NullInt64); ok {
 						value = nil
 						if ni.Valid {
@@ -206,7 +206,7 @@ func (d *dbBase) collectFieldValue(mi *modelInfo, fi *fieldInfo, ind reflect.Val
 					} else {
 						value = field.Int()
 					}
-				case fi.fieldType&IsRelField > 0:
+				case fi.fieldType & IsRelField > 0:
 					if field.IsNil() {
 						value = nil
 					} else {
@@ -349,7 +349,7 @@ func (d *dbBase) Read(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.Lo
 
 // execute insert sql dbQuerier with given struct reflect.Value.
 func (d *dbBase) Insert(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.Location) (int64, error) {
-	names := make([]string, 0, len(mi.fields.dbcols)-1)
+	names := make([]string, 0, len(mi.fields.dbcols) - 1)
 	values, err := d.collectValues(mi, ind, mi.fields.dbcols, true, true, &names, tz)
 	if err != nil {
 		return 0, err
@@ -361,8 +361,8 @@ func (d *dbBase) Insert(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.
 // multi-insert sql with given slice struct reflect.Value.
 func (d *dbBase) InsertMulti(q dbQuerier, mi *modelInfo, sind reflect.Value, bulk int, tz *time.Location) (int64, error) {
 	var (
-		cnt    int64
-		nums   int
+		cnt int64
+		nums int
 		values []interface{}
 		names  []string
 	)
@@ -385,7 +385,7 @@ func (d *dbBase) InsertMulti(q dbQuerier, mi *modelInfo, sind reflect.Value, bul
 			if err != nil {
 				return cnt, err
 			}
-			values = make([]interface{}, bulk*len(vus))
+			values = make([]interface{}, bulk * len(vus))
 			nums += copy(values, vus)
 
 		} else {
@@ -402,7 +402,7 @@ func (d *dbBase) InsertMulti(q dbQuerier, mi *modelInfo, sind reflect.Value, bul
 			nums += copy(values[nums:], vus)
 		}
 
-		if i > 1 && i%bulk == 0 || length == i {
+		if i > 1 && i % bulk == 0 || length == i {
 			num, err := d.InsertValue(q, mi, true, names, values[:nums])
 			if err != nil {
 				return cnt, err
@@ -432,7 +432,7 @@ func (d *dbBase) InsertValue(q dbQuerier, mi *modelInfo, isMulti bool, names []s
 	multi := len(values) / len(names)
 
 	if isMulti {
-		qmarks = strings.Repeat(qmarks+"), (", multi-1) + qmarks
+		qmarks = strings.Repeat(qmarks + "), (", multi - 1) + qmarks
 	}
 
 	query := fmt.Sprintf("INSERT INTO %s%s%s (%s%s%s) VALUES (%s)", Q, mi.table, Q, Q, columns, Q, qmarks)
@@ -467,7 +467,7 @@ func (d *dbBase) Update(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.
 	// if specify cols length is zero, then commit all columns.
 	if len(cols) == 0 {
 		cols = mi.fields.dbcols
-		setNames = make([]string, 0, len(mi.fields.dbcols)-1)
+		setNames = make([]string, 0, len(mi.fields.dbcols) - 1)
 	} else {
 		setNames = make([]string, 0, len(cols))
 	}
@@ -516,7 +516,7 @@ func (d *dbBase) Delete(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.
 		}
 		if num > 0 {
 			if mi.fields.pk.auto {
-				if mi.fields.pk.fieldType&IsPostiveIntegerField > 0 {
+				if mi.fields.pk.fieldType & IsPostiveIntegerField > 0 {
 					ind.Field(mi.fields.pk.fieldIndex).SetUint(0)
 				} else {
 					ind.Field(mi.fields.pk.fieldIndex).SetInt(0)
@@ -576,17 +576,17 @@ func (d *dbBase) UpdateBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 		if c, ok := values[i].(colValue); ok {
 			switch c.opt {
 			case ColAdd:
-				cols = append(cols, col+" = "+col+" + ?")
+				cols = append(cols, col + " = " + col + " + ?")
 			case ColMinus:
-				cols = append(cols, col+" = "+col+" - ?")
+				cols = append(cols, col + " = " + col + " - ?")
 			case ColMultiply:
-				cols = append(cols, col+" = "+col+" * ?")
+				cols = append(cols, col + " = " + col + " * ?")
 			case ColExcept:
-				cols = append(cols, col+" = "+col+" / ?")
+				cols = append(cols, col + " = " + col + " / ?")
 			}
 			values[i] = c.value
 		} else {
-			cols = append(cols, col+" = ?")
+			cols = append(cols, col + " = ?")
 		}
 	}
 
@@ -767,7 +767,7 @@ func (d *dbBase) ReadBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condi
 		}
 		if hasRel {
 			for _, fi := range mi.fields.fieldsDB {
-				if fi.fieldType&IsRelField > 0 {
+				if fi.fieldType & IsRelField > 0 {
 					if maps[fi.column] == false {
 						tCols = append(tCols, fi.column)
 					}
@@ -803,6 +803,7 @@ func (d *dbBase) ReadBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condi
 	if qs.distinct {
 		sqlSelect += " DISTINCT"
 	}
+
 	query := fmt.Sprintf("%s %s FROM %s%s%s T0 %s%s%s%s%s", sqlSelect, sels, Q, mi.table, Q, join, where, groupBy, orderBy, limit)
 
 	d.ins.ReplaceMarks(&query)
@@ -930,9 +931,15 @@ func (d *dbBase) Count(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condition
 	tables.getOrderSQL(qs.orders)
 	join := tables.getJoinSQL()
 
+	cxt := "COUNT(*)"
+	if len(qs.groups) > 0 {
+		selects := tables.getFieldSql(qs.groups[0])
+		cxt = fmt.Sprintf("count(DISTINCT %s)", selects)
+	}
+
 	Q := d.ins.TableQuote()
 
-	query := fmt.Sprintf("SELECT COUNT(*) FROM %s%s%s T0 %s%s", Q, mi.table, Q, join, where)
+	query := fmt.Sprintf("SELECT %s FROM %s%s%s T0 %s%s", cxt, Q, mi.table, Q, join, where)
 
 	d.ins.ReplaceMarks(&query)
 
@@ -1050,7 +1057,7 @@ func (d *dbBase) convertValueFromDB(fi *fieldInfo, val interface{}, tz *time.Loc
 
 	fieldType := fi.fieldType
 
-setValue:
+	setValue:
 	switch {
 	case fieldType == TypeBooleanField:
 		if str == nil {
@@ -1091,7 +1098,7 @@ setValue:
 		if str != nil {
 			s := str.String()
 			var (
-				t   time.Time
+				t time.Time
 				err error
 			)
 			if len(s) >= 19 {
@@ -1111,7 +1118,7 @@ setValue:
 			}
 			value = t
 		}
-	case fieldType&IsIntegerField > 0:
+	case fieldType & IsIntegerField > 0:
 		if str == nil {
 			s := StrTo(ToStr(val))
 			str = &s
@@ -1140,7 +1147,7 @@ setValue:
 				tErr = err
 				goto end
 			}
-			if fieldType&IsPostiveIntegerField > 0 {
+			if fieldType & IsPostiveIntegerField > 0 {
 				v, _ := str.Uint64()
 				value = v
 			} else {
@@ -1166,13 +1173,13 @@ setValue:
 			}
 			value = v
 		}
-	case fieldType&IsRelField > 0:
+	case fieldType & IsRelField > 0:
 		fi = fi.relModelInfo.fields.pk
 		fieldType = fi.fieldType
 		goto setValue
 	}
 
-end:
+	end:
 	if tErr != nil {
 		err := fmt.Errorf("convert to `%s` failed, field: %s err: %s", fi.addrValue.Type(), fi.fullName, tErr)
 		return nil, err
@@ -1188,7 +1195,7 @@ func (d *dbBase) setFieldValue(fi *fieldInfo, value interface{}, field reflect.V
 	fieldType := fi.fieldType
 	isNative := fi.isFielder == false
 
-setValue:
+	setValue:
 	switch {
 	case fieldType == TypeBooleanField:
 		if isNative {
@@ -1291,8 +1298,8 @@ setValue:
 			v := value.(int64)
 			field.Set(reflect.ValueOf(&v))
 		}
-	case fieldType&IsIntegerField > 0:
-		if fieldType&IsPostiveIntegerField > 0 {
+	case fieldType & IsIntegerField > 0:
+		if fieldType & IsPostiveIntegerField > 0 {
 			if isNative {
 				if value == nil {
 					value = uint64(0)
@@ -1345,7 +1352,7 @@ setValue:
 				field.SetFloat(value.(float64))
 			}
 		}
-	case fieldType&IsRelField > 0:
+	case fieldType & IsRelField > 0:
 		if value != nil {
 			fieldType = fi.relModelInfo.fields.pk.fieldType
 			mf := reflect.New(fi.relModelInfo.addrField.Elem().Type())
@@ -1374,7 +1381,7 @@ func (d *dbBase) ReadValues(q dbQuerier, qs *querySet, mi *modelInfo, cond *Cond
 	var (
 		maps  []Params
 		lists []ParamsList
-		list  ParamsList
+		list ParamsList
 	)
 
 	typ := 0
@@ -1457,7 +1464,7 @@ func (d *dbBase) ReadValues(q dbQuerier, qs *querySet, mi *modelInfo, cond *Cond
 	defer rs.Close()
 
 	var (
-		cnt     int64
+		cnt int64
 		columns []string
 	)
 	for rs.Next() {
@@ -1616,7 +1623,7 @@ func (d *dbBase) GetColumns(db dbQuerier, table string) (map[string][3]string, e
 	for rows.Next() {
 		var (
 			name string
-			typ  string
+			typ string
 			null string
 		)
 		err := rows.Scan(&name, &typ, &null)

@@ -121,9 +121,9 @@ func (t *dbTables) parseRelated(rels []string, depth int) {
 
 	for i, s := range related {
 		var (
-			exs    = strings.Split(s, ExprSep)
-			names  = make([]string, 0, len(exs))
-			mmi    = t.mi
+			exs = strings.Split(s, ExprSep)
+			names = make([]string, 0, len(exs))
+			mmi = t.mi
 			cancel = true
 			jtl    *dbTable
 		)
@@ -174,7 +174,7 @@ func (t *dbTables) getJoinSQL() (join string) {
 			join += "LEFT OUTER JOIN "
 		}
 		var (
-			table  string
+			table string
 			t1, t2 string
 			c1, c2 string
 		)
@@ -224,7 +224,7 @@ func (t *dbTables) parseExprs(mi *modelInfo, exprs []string) (index, name string
 
 	inner := true
 
-loopFor:
+	loopFor:
 	for i, ex := range exprs {
 
 		var ok, okN bool
@@ -258,7 +258,7 @@ loopFor:
 			}
 
 			if i < num {
-				fiN, okN = mmi.fields.GetByAny(exprs[i+1])
+				fiN, okN = mmi.fields.GetByAny(exprs[i + 1])
 			}
 
 			if isRel && (fi.mi.isThrough == false || num != i) {
@@ -282,7 +282,7 @@ loopFor:
 				continue
 			}
 
-		loopEnd:
+			loopEnd:
 
 			if i == 0 || jtl == nil {
 				index = "T0"
@@ -411,6 +411,24 @@ func (t *dbTables) getGroupSQL(groups []string) (groupSQL string) {
 	}
 
 	groupSQL = fmt.Sprintf("GROUP BY %s ", strings.Join(groupSqls, ", "))
+	return
+}
+
+// generate group sql.
+func (t *dbTables) getFieldSql(field string) (fieldSQL string) {
+	if len(field) == 0 {
+		return
+	}
+
+	Q := t.base.TableQuote()
+
+	exprs := strings.Split(field, ExprSep)
+	index, _, fi, suc := t.parseExprs(t.mi, exprs)
+	if suc == false {
+		panic(fmt.Errorf("unknown field/column name `%s`", strings.Join(exprs, ExprSep)))
+	}
+
+	fieldSQL = fmt.Sprintf("%s.%s%s%s", index, Q, fi.column, Q)
 	return
 }
 
