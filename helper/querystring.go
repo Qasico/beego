@@ -5,6 +5,7 @@ import (
 	"strings"
 	"strconv"
 	"encoding/json"
+	"fmt"
 )
 
 //
@@ -78,6 +79,12 @@ offset int64, limit int64, join []string) {
 			for _, partcond := range strings.Split(cond, ",") {
 				kv := strings.Split(partcond, ":")
 				if len(kv) > 1 {
+
+					if len(kv) > 3 {
+						kv[1] = fmt.Sprintf("%s:%s:%s", kv[1], kv[2], kv[3])
+					}
+
+
 					k, val := kv[0], kv[1]
 					cq[k] = val
 				} else {
