@@ -76,7 +76,7 @@ offset int64, limit int64, join []string) {
 
 		for _, cond := range strings.Split(param[0], "|") {
 
-			for _, partcond := range strings.Split(cond, ",") {
+			for _, partcond := range strings.Split(cond, "%2C") {
 				kv := strings.Split(partcond, ":")
 				if len(kv) > 1 {
 
